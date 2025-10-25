@@ -1,15 +1,18 @@
 @extends('layouts.app')
 
-@section('title', 'Add New Product')
+@section('title', 'Edit Product: ' . $product->name)
 
 @section('content')
 <div class="container mx-auto px-4 py-8 max-w-2xl">
     <div class="bg-white rounded-xl shadow-lg p-8">
         <div class="flex items-center mb-6">
-            <div class="bg-green-100 p-3 rounded-full mr-4">
-                <span class="text-green-600 text-2xl">➕</span>
+            <div class="bg-yellow-100 p-3 rounded-full mr-4">
+                <span class="text-yellow-600 text-2xl">✏️</span>
             </div>
-            <h1 class="text-3xl font-bold text-gray-800">Add New Product</h1>
+            <div>
+                <h1 class="text-3xl font-bold text-gray-800">Edit Product</h1>
+                <p class="text-gray-600 mt-1">Update the details for "{{ $product->name }}"</p>
+            </div>
         </div>
 
         <!-- Error Messages -->
@@ -27,8 +30,9 @@
             </div>
         @endif
 
-        <form action="{{ route('products.store') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('products.update', $product->id) }}" method="POST" enctype="multipart/form-data">
             @csrf
+            @method('PUT')
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Product Name -->
@@ -36,7 +40,7 @@
                     <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
                         Product Name <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="name" name="name" value="{{ old('name') }}"
+                    <input type="text" id="name" name="name" value="{{ old('name', $product->name) }}"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                            placeholder="Enter product name" required>
                 </div>
@@ -48,7 +52,7 @@
                     </label>
                     <div class="relative">
                         <span class="absolute left-3 top-3 text-gray-500">$</span>
-                        <input type="number" id="price" name="price" value="{{ old('price') }}"
+                        <input type="number" id="price" name="price" value="{{ old('price', $product->price) }}"
                                class="w-full pl-8 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                                min="0" step="0.01" placeholder="0.00" required>
                     </div>
@@ -59,7 +63,7 @@
                     <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">
                         Category <span class="text-red-500">*</span>
                     </label>
-                    <input type="text" id="category" name="category" value="{{ old('category') }}"
+                    <input type="text" id="category" name="category" value="{{ old('category', $product->category) }}"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                            placeholder="e.g., Electronics, Clothing" required>
                 </div>
@@ -69,16 +73,16 @@
                     <label for="stock_quantity" class="block text-sm font-semibold text-gray-700 mb-2">
                         Stock Quantity
                     </label>
-                    <input type="number" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', 0) }}"
+                    <input type="number" id="stock_quantity" name="stock_quantity" value="{{ old('stock_quantity', $product->stock_quantity ?? 0) }}"
                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
                            min="0" placeholder="0">
                 </div>
 
                 <!-- Active Status -->
                 <div class="flex items-center">
-                    <input type="checkbox" id="is_active" name="is_active"
+                    <input type="checkbox" id="is_active" name="is_active" value="1"
                            class="w-5 h-5 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-                           {{ old('is_active', true) ? 'checked' : '' }}>
+                           {{ old('is_active', $product->is_active) ? 'checked' : '' }}>
                     <label for="is_active" class="ml-3 text-sm font-semibold text-gray-700">
                         Active Product
                     </label>
@@ -92,13 +96,31 @@
                 </label>
                 <textarea id="description" name="description" rows="4"
                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 resize-vertical"
-                          placeholder="Enter product description">{{ old('description') }}</textarea>
+                          placeholder="Enter product description">{{ old('description', $product->description) }}</textarea>
             </div>
+
+            <!-- Current Image Display -->
+            @if($product->image)
+                <div class="mt-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">
+                        Current Image
+                    </label>
+                    <div class="relative inline-block">
+                        <img src="{{ asset('images/' . $product->image) }}"
+                             alt="Current product image"
+                             class="h-32 w-32 object-cover rounded-lg border border-gray-300">
+                        <button type="button" onclick="removeCurrentImage()"
+                                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600 transition duration-200">
+                            ×
+                        </button>
+                    </div>
+                </div>
+            @endif
 
             <!-- Image Upload -->
             <div class="mt-6">
                 <label for="image" class="block text-sm font-semibold text-gray-700 mb-2">
-                    Product Image
+                    {{ $product->image ? 'Replace Image (Optional)' : 'Product Image' }}
                 </label>
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition duration-200">
                     <div class="space-y-2">
@@ -119,18 +141,22 @@
 
                 <!-- Image Preview -->
                 <div id="image-preview" class="mt-4 hidden">
+                    <p class="text-sm text-gray-600 mb-2">New image preview:</p>
                     <img id="preview-img" src="" alt="Preview" class="max-w-full h-48 object-cover rounded-lg mx-auto">
                     <button type="button" onclick="removeImage()" class="mt-2 text-red-600 hover:text-red-700 text-sm">
-                        Remove image
+                        Remove new image
                     </button>
                 </div>
             </div>
 
-            <!-- Submit Button -->
+            <!-- Submit Buttons -->
             <div class="mt-8 flex gap-4">
-                <button type="submit" class="flex-1 bg-green-600 text-white py-3 px-6 rounded-lg hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-200 font-semibold">
-                    💾 Save Product
+                <button type="submit" class="flex-1 bg-yellow-600 text-white py-3 px-6 rounded-lg hover:bg-yellow-700 focus:ring-2 focus:ring-yellow-500 focus:ring-offset-2 transition duration-200 font-semibold">
+                    💾 Update Product
                 </button>
+                <a href="{{ route('products.show', $product->id) }}" class="bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-semibold">
+                    👁️ View Product
+                </a>
                 <a href="{{ route('products.index') }}" class="bg-gray-500 text-white py-3 px-6 rounded-lg hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-200 font-semibold">
                     Cancel
                 </a>
@@ -155,6 +181,14 @@ function previewImage(event) {
 function removeImage() {
     document.getElementById('image').value = '';
     document.getElementById('image-preview').classList.add('hidden');
+}
+
+function removeCurrentImage() {
+    if (confirm('Are you sure you want to remove the current image? You can upload a new one.')) {
+        // This would need backend support to actually remove the image
+        // For now, just hide it visually
+        event.target.closest('.relative').style.display = 'none';
+    }
 }
 </script>
 @endsection
