@@ -12,12 +12,14 @@ class ProductController extends Controller
     // Display all products with search and pagination
     public function index(Request $request)
     {
-        $query = Product::query();
+        $query = Product::with('category');
 
         if ($request->has('search')) {
             $search = $request->search;
             $query->where('name', 'like', "%$search%")
-                ->orWhere('category', 'like', "%$search%");
+                ->orWhereHas('category', function ($q) use ($search) {
+                    $q->where('name', 'like', "%$search%");
+                });
         }
 
         $products = $query->latest()->paginate(9);
@@ -38,7 +40,7 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'category' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'stock_quantity' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',
@@ -63,14 +65,18 @@ class ProductController extends Controller
     // Display product details
     public function show(Product $product)
     {
+        $product->load('category'); // ✅ تحميل علاقة الفئة مع المنتج
         return view('products.show', compact('product'));
     }
+
 
     // Display form to edit product
     public function edit(Product $product)
     {
+        $product->load('category');
         return view('products.edit', compact('product'));
     }
+
 
     // Update product data
     public function update(Request $request, Product $product)
@@ -79,7 +85,7 @@ class ProductController extends Controller
             'name' => 'required|string|max:255',
             'description' => 'nullable|string',
             'price' => 'required|numeric|min:0',
-            'category' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:categories,id',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
             'stock_quantity' => 'nullable|integer|min:0',
             'is_active' => 'nullable|boolean',

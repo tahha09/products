@@ -72,9 +72,16 @@
                 <!-- Category -->
                 <div class="border-t pt-6">
                     <span class="text-sm font-semibold text-gray-500 uppercase tracking-wide block mb-2">Category</span>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                        📁 {{ $product->category }}
-                    </span>
+                    @if($product->category)
+                        <a href="{{ route('categories.show', $product->category->id) }}"
+                           class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 transition duration-200">
+                            📁 {{ $product->category->name }}
+                        </a>
+                    @else
+                        <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-800">
+                            📁 No category
+                        </span>
+                    @endif
                 </div>
 
                 <!-- Stock Quantity -->

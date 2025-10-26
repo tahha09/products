@@ -60,12 +60,18 @@
 
                 <!-- Category -->
                 <div>
-                    <label for="category" class="block text-sm font-semibold text-gray-700 mb-2">
-                        Category <span class="text-red-500">*</span>
+                    <label for="category_id" class="block text-sm font-semibold text-gray-700 mb-2">
+                        Category
                     </label>
-                    <input type="text" id="category" name="category" value="{{ old('category', $product->category) }}"
-                           class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200"
-                           placeholder="e.g., Electronics, Clothing" required>
+                    <select id="category_id" name="category_id"
+                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200">
+                        <option value="">No category</option>
+                        @foreach(\App\Models\Category::where('is_active', true)->get() as $category)
+                            <option value="{{ $category->id }}" {{ old('category_id', $product->category_id) == $category->id ? 'selected' : '' }}>
+                                {{ $category->name }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
 
                 <!-- Stock Quantity -->

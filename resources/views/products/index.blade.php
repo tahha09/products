@@ -53,7 +53,15 @@
                         <!-- Product Info -->
                         <div class="mb-3">
                             <h3 class="text-xl font-bold text-gray-800 mb-1 line-clamp-2">{{ $product->name }}</h3>
-                            <p class="text-sm text-gray-500 mb-2">{{ $product->category }}</p>
+                            <p class="text-sm text-gray-500 mb-2">
+                                @if($product->category)
+                                    <a href="{{ route('categories.show', $product->category->id) }}" class="text-blue-600 hover:underline">
+                                        {{ $product->category->name }}
+                                    </a>
+                                @else
+                                    No category
+                                @endif
+                            </p>
                             <div class="flex items-center justify-between">
                                 <span class="text-2xl font-bold text-green-600">${{ number_format($product->price, 2) }}</span>
                                 @if($product->stock_quantity !== null)
