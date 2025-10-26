@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Category;
+use App\Http\Requests\CategoryStoreRequest;
+use App\Http\Requests\CategoryUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -15,6 +17,10 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         $query = Category::query();
+
+        if (auth()->check()) {
+            $query->where('user_id', auth()->id());
+        }
 
         if ($request->has('search')) {
             $search = $request->search;
@@ -38,14 +44,9 @@ class CategoryController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(CategoryStoreRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories',
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'is_active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Upload image if present
         if ($request->hasFile('image') && $request->file('image')->isValid()) {
@@ -57,6 +58,7 @@ class CategoryController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['user_id'] = auth()->id();
 
         Category::create($validated);
 
@@ -68,6 +70,9 @@ class CategoryController extends Controller
      */
     public function show(Category $category)
     {
+        if (auth()->check() && $category->user_id !== auth()->id()) {
+            abort(403);
+        }
         $category->load('products');
         return view('categories.show', compact('category'));
     }
@@ -77,20 +82,18 @@ class CategoryController extends Controller
      */
     public function edit(Category $category)
     {
+        if ($category->user_id !== auth()->id()) {
+            abort(403);
+        }
         return view('categories.edit', compact('category'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Category $category)
+    public function update(CategoryUpdateRequest $request, Category $category)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:categories,name,' . $category->id,
-            'description' => 'nullable|string',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'is_active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Upload new image and delete old one
         if ($request->hasFile('image') && $request->file('image')->isValid()) {
@@ -117,6 +120,9 @@ class CategoryController extends Controller
      */
     public function destroy(Category $category)
     {
+        if ($category->user_id !== auth()->id()) {
+            abort(403);
+        }
         if ($category->image && file_exists(public_path('images/categories/' . $category->image))) {
             unlink(public_path('images/categories/' . $category->image));
         }

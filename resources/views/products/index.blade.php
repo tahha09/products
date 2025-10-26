@@ -5,10 +5,12 @@
 @section('content')
 <div class="container mx-auto px-4 py-8">
     <div class="flex justify-between items-center mb-8">
-        <h1 class="text-3xl font-bold text-gray-800">All Products</h1>
-        <a href="{{ route('products.create') }}" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
-            + Add New Product
-        </a>
+        <h1 class="text-3xl font-bold text-gray-800">{{ auth()->check() ? 'My Products' : 'All Products' }}</h1>
+        @auth
+            <a href="{{ route('products.create') }}" class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                + Add New Product
+            </a>
+        @endauth
     </div>
 
     <!-- Search Bar -->
@@ -83,20 +85,22 @@
                                class="bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
                                 👁️ View Details
                             </a>
-                            <div class="flex gap-2">
-                                <a href="{{ route('products.edit', $product->id) }}"
-                                   class="flex-1 bg-yellow-500 text-white text-center py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-200 text-sm">
-                                    ✏️ Edit
-                                </a>
-                                <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="flex-1"
-                                      onsubmit="return confirm('Are you sure you want to delete this product?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition duration-200 text-sm">
-                                        🗑️ Delete
-                                    </button>
-                                </form>
-                            </div>
+                            @auth
+                                <div class="flex gap-2">
+                                    <a href="{{ route('products.edit', $product->id) }}"
+                                       class="flex-1 bg-yellow-500 text-white text-center py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-200 text-sm">
+                                        ✏️ Edit
+                                    </a>
+                                    <form action="{{ route('products.destroy', $product->id) }}" method="POST" class="flex-1"
+                                          onsubmit="return confirm('Are you sure you want to delete this product?');">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition duration-200 text-sm">
+                                            🗑️ Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            @endauth
                         </div>
                     </div>
                 </div>
@@ -118,9 +122,13 @@
                     Get started by adding your first product.
                 @endif
             </p>
-            <a href="{{ route('products.create') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200">
-                + Add First Product
-            </a>
+            @auth
+                <a href="{{ route('products.create') }}" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200">
+                    + Add First Product
+                </a>
+            @else
+                <p class="text-gray-500">Please <a href="{{ route('login') }}" class="text-blue-600 hover:underline">login</a> to add products.</p>
+            @endauth
         </div>
     @endif
 </div>

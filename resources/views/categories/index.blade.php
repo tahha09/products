@@ -9,12 +9,14 @@
                 <div class="bg-blue-100 p-3 rounded-full mr-4">
                     <span class="text-blue-600 text-2xl">📁</span>
                 </div>
-                <h1 class="text-3xl font-bold text-gray-800">All Categories</h1>
+                <h1 class="text-3xl font-bold text-gray-800">{{ auth()->check() ? 'My Categories' : 'All Categories' }}</h1>
             </div>
-            <a href="{{ route('categories.create') }}"
-                class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
-                + Add New Category
-            </a>
+            @auth
+                <a href="{{ route('categories.create') }}"
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                    + Add New Category
+                </a>
+            @endauth
         </div>
 
         <!-- Search Bar -->
@@ -83,22 +85,24 @@
                                     class="bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-200">
                                     👁️ View Details
                                 </a>
-                                <div class="flex gap-2">
-                                    <a href="{{ route('categories.edit', $category->id) }}"
-                                        class="flex-1 bg-yellow-500 text-white text-center py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-200 text-sm">
-                                        ✏️ Edit
-                                    </a>
-                                    <form action="{{ route('categories.destroy', $category->id) }}" method="POST"
-                                        class="flex-1"
-                                        onsubmit="return confirm('Are you sure you want to delete this category?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition duration-200 text-sm">
-                                            🗑️ Delete
-                                        </button>
-                                    </form>
-                                </div>
+                                @auth
+                                    <div class="flex gap-2">
+                                        <a href="{{ route('categories.edit', $category->id) }}"
+                                            class="flex-1 bg-yellow-500 text-white text-center py-2 px-3 rounded-lg hover:bg-yellow-600 transition duration-200 text-sm">
+                                            ✏️ Edit
+                                        </a>
+                                        <form action="{{ route('categories.destroy', $category->id) }}" method="POST"
+                                            class="flex-1"
+                                            onsubmit="return confirm('Are you sure you want to delete this category?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="w-full bg-red-600 text-white py-2 px-3 rounded-lg hover:bg-red-700 transition duration-200 text-sm">
+                                                🗑️ Delete
+                                            </button>
+                                        </form>
+                                    </div>
+                                @endauth
                             </div>
                         </div>
                     </div>
@@ -122,10 +126,14 @@
                         Get started by adding your first category.
                     @endif
                 </p>
-                <a href="{{ route('categories.create') }}"
-                    class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200">
-                    + Add First Category
-                </a>
+                @auth
+                    <a href="{{ route('categories.create') }}"
+                        class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition duration-200">
+                        + Add First Category
+                    </a>
+                @else
+                    <p class="text-gray-500">Please <a href="{{ route('login') }}" class="text-blue-600 hover:underline">login</a> to add categories.</p>
+                @endauth
             </div>
         @endif
 

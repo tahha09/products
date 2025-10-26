@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Http\Requests\ProductStoreRequest;
+use App\Http\Requests\ProductUpdateRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -14,7 +16,11 @@ class ProductController extends Controller
     {
         $query = Product::with('category');
 
-        if ($request->has('search')) {
+        if (auth()->check()) {
+            $query->where('user_id', auth()->id());
+        }
+
+        if ($request->has('search') && $request->search !== '') {
             $search = $request->search;
             $query->where('name', 'like', "%$search%")
                 ->orWhereHas('category', function ($q) use ($search) {
@@ -34,17 +40,9 @@ class ProductController extends Controller
     }
 
     // Save new product
-    public function store(Request $request)
+    public function store(ProductStoreRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'is_active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Upload image if present
         if ($request->hasFile('image') && $request->file('image')->isValid()) {
@@ -56,6 +54,7 @@ class ProductController extends Controller
         }
 
         $validated['is_active'] = $request->has('is_active');
+        $validated['user_id'] = auth()->id();
 
         Product::create($validated);
 
@@ -65,7 +64,10 @@ class ProductController extends Controller
     // Display product details
     public function show(Product $product)
     {
-        $product->load('category'); 
+        if (auth()->check() && $product->user_id !== auth()->id()) {
+            abort(403);
+        }
+        $product->load('category');
         return view('products.show', compact('product'));
     }
 
@@ -73,23 +75,18 @@ class ProductController extends Controller
     // Display form to edit product
     public function edit(Product $product)
     {
+        if ($product->user_id !== auth()->id()) {
+            abort(403);
+        }
         $product->load('category');
         return view('products.edit', compact('product'));
     }
 
 
     // Update product data
-    public function update(Request $request, Product $product)
+    public function update(ProductUpdateRequest $request, Product $product)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'price' => 'required|numeric|min:0',
-            'category_id' => 'nullable|exists:categories,id',
-            'image' => 'nullable|image|mimes:jpg,jpeg,png,gif|max:2048',
-            'stock_quantity' => 'nullable|integer|min:0',
-            'is_active' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Upload new image and delete old one
         if ($request->hasFile('image') && $request->file('image')->isValid()) {
@@ -114,6 +111,9 @@ class ProductController extends Controller
     // Delete product with image
     public function destroy(Product $product)
     {
+        if ($product->user_id !== auth()->id()) {
+            abort(403);
+        }
         if ($product->image && file_exists(public_path('images/' . $product->image))) {
             unlink(public_path('images/' . $product->image));
         }

@@ -13,16 +13,15 @@ class ProductFactory extends Factory
 {
     public function definition(): array
     {
-        $categories = ['Electronics', 'Clothing', 'Books', 'Accessories', 'Home'];
-
         return [
             'name' => $this->faker->words(2, true),
             'description' => $this->faker->sentence(10),
             'price' => $this->faker->randomFloat(2, 10, 999),
-            'category' => $this->faker->randomElement($categories),
+            'category_id' => null,
             'image' => null,
             'stock_quantity' => $this->faker->numberBetween(0, 100),
             'is_active' => $this->faker->boolean(90),
+            'user_id' => \App\Models\User::factory(),
         ];
     }
 }
