@@ -65,7 +65,7 @@ class ProductController extends Controller
     // Display product details
     public function show(Product $product)
     {
-        $product->load('category'); // ✅ تحميل علاقة الفئة مع المنتج
+        $product->load('category'); 
         return view('products.show', compact('product'));
     }
 
