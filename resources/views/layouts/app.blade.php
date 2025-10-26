@@ -11,6 +11,7 @@
             <h1 class="text-xl font-bold">🛍️ Products App</h1>
             <div class="space-x-6">
                 <a href="{{ route('products.index') }}" class="hover:text-yellow-300">All Products</a>
+                <a href="{{ route('categories.index') }}" class="hover:text-yellow-300">All categories</a>
                 <a href="{{ route('products.create') }}" class="hover:text-yellow-300">Add Product</a>
             </div>
         </div>
