@@ -131,4 +131,40 @@ class CategoryController extends Controller
 
         return redirect()->route('categories.index')->with('success', 'Category deleted successfully!');
     }
+
+    /**
+     * Display trashed categories.
+     */
+    public function trashed()
+    {
+        $categories = Category::onlyTrashed()->where('user_id', auth()->id())->latest()->paginate(9);
+        return view('categories.trashed', compact('categories'));
+    }
+
+    /**
+     * Restore a trashed category.
+     */
+    public function restore($id)
+    {
+        $category = Category::onlyTrashed()->where('user_id', auth()->id())->findOrFail($id);
+        $category->restore();
+
+        return redirect()->route('categories.trashed')->with('success', 'Category restored successfully!');
+    }
+
+    /**
+     * Force delete a trashed category.
+     */
+    public function forceDelete($id)
+    {
+        $category = Category::onlyTrashed()->where('user_id', auth()->id())->findOrFail($id);
+
+        if ($category->image && file_exists(public_path('images/categories/' . $category->image))) {
+            unlink(public_path('images/categories/' . $category->image));
+        }
+
+        $category->forceDelete();
+
+        return redirect()->route('categories.trashed')->with('success', 'Category permanently deleted!');
+    }
 }

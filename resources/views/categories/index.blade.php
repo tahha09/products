@@ -12,10 +12,17 @@
                 <h1 class="text-3xl font-bold text-gray-800">{{ auth()->check() ? 'My Categories' : 'All Categories' }}</h1>
             </div>
             @auth
-                <a href="{{ route('categories.create') }}"
-                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
-                    + Add New Category
-                </a>
+                <div class="flex gap-4">
+                    @if(auth()->user()->isAdmin())
+                        <a href="{{ route('categories.trashed') }}" class="bg-orange-600 text-white px-4 py-2 rounded-lg hover:bg-orange-700 transition duration-200">
+                            🗂️ Trashed Categories
+                        </a>
+                    @endif
+                    <a href="{{ route('categories.create') }}"
+                        class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition duration-200">
+                        + Add New Category
+                    </a>
+                </div>
             @endauth
         </div>
 
